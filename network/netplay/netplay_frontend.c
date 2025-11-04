@@ -23,6 +23,18 @@
 #include "../../configuration.h"
 #include "../../verbosity.h"
 
+#include "../../audio/audio_driver.h"
+#include "../../gfx/gfx_widgets.h"
+#include "../../gfx/video_driver.h"
+#include "../../input/input_driver.h"
+
+#include "netplay.h"
+#include "netplay_defines.h"
+
+#include "../gekko/gekkonet.h"
+
+#define GEKKONET_MAX_CLIENTS 8
+
 #include "netplay.h"
 #include "netplay_defines.h"
 
@@ -265,6 +277,10 @@ bool netplay_gekkonet_start_client(const char *server,
    RARCH_LOG("[GekkoNet] Starting client session (%s:%u).\n",
          string_is_empty(server) ? "local" : server, port);
 
+
+   RARCH_LOG("[GekkoNet] Starting client session (%s:%u).\n",
+         string_is_empty(server) ? "local" : server, port);
+
    return netplay_gekkonet_start_session(GEKKONET_MODE_CLIENT,
          server, port, session, deferred);
 }
@@ -325,6 +341,10 @@ bool netplay_driver_ctl(enum rarch_netplay_ctl_state state, void *data)
    {
       case RARCH_NETPLAY_CTL_GAME_WATCH:
          netplay_gekkonet_toggle_game_watch();
+         return true;
+      case RARCH_NETPLAY_CTL_PLAYER_CHAT:
+         netplay_gekkonet_toggle_chat_overlay();
+         return true;
          return true;
       case RARCH_NETPLAY_CTL_PLAYER_CHAT:
          netplay_gekkonet_toggle_chat_overlay();
@@ -419,6 +439,70 @@ bool netplay_driver_ctl(enum rarch_netplay_ctl_state state, void *data)
    }
 
    return false;
+}
+
+bool netplay_reinit_serialization(void)
+{
+   if (!g_gekkonet.session)
+      return false;
+   return gekkonet_session_request_state(g_gekkonet.session);
+}
+
+bool netplay_is_spectating(void)
+{
+   return g_gekkonet.spectating;
+}
+
+void netplay_force_send_savestate(void)
+{
+   if (g_gekkonet.session)
+      gekkonet_session_request_state(g_gekkonet.session);
+}
+
+#ifdef HAVE_NETPLAYDISCOVERY
+bool init_netplay_discovery(void)
+{
+   return gekkonet_lobby_initialize(&g_gekkonet.lobby);
+}
+
+void deinit_netplay_discovery(void)
+{
+   gekkonet_lobby_deinitialize(&g_gekkonet.lobby);
+}
+
+bool netplay_discovery_driver_ctl(
+      enum rarch_netplay_discovery_ctl_state state, void *data)
+{
+   return gekkonet_lobby_command(&g_gekkonet.lobby, state, data);
+}
+#endif
+
+const mitm_server_t netplay_mitm_server_list[NETPLAY_MITM_SERVERS] = {0};
+
+void video_frame_net(const void *data,
+      unsigned width, unsigned height, size_t pitch)
+{
+   video_driver_frame(data, width, height, pitch);
+}
+
+void audio_sample_net(int16_t left, int16_t right)
+{
+   audio_driver_sample(left, right);
+}
+
+size_t audio_sample_batch_net(const int16_t *data, size_t frames)
+{
+   return audio_driver_sample_batch(data, frames);
+}
+
+int16_t input_state_net(unsigned port, unsigned device,
+      unsigned idx, unsigned id)
+{
+   return input_driver_state_wrapper(port, device, idx, id);
+}
+
+const gfx_widget_t gfx_widget_netplay_chat = {0};
+const gfx_widget_t gfx_widget_netplay_ping = {0};
 }
 
 bool netplay_reinit_serialization(void)
