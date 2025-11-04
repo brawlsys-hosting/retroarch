@@ -201,6 +201,14 @@ bool netplay_reinit_serialization(void);
 bool netplay_is_spectating(void);
 void netplay_force_send_savestate(void);
 
+bool netplay_gekkonet_start_client(const char *server_address,
+      unsigned port_number, const char *session_token, bool deferred_join);
+bool netplay_gekkonet_start_host(unsigned port);
+void netplay_gekkonet_disconnect(void);
+void netplay_gekkonet_shutdown(void);
+void netplay_gekkonet_toggle_game_watch(void);
+void netplay_gekkonet_toggle_chat_overlay(void);
+
 #ifdef HAVE_NETPLAYDISCOVERY
 /** Initialize Netplay discovery */
 bool init_netplay_discovery(void);
