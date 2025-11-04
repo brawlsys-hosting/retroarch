@@ -4796,17 +4796,17 @@ bool command_event(enum event_command cmd, void *data)
             !settings->bools.netplay_ping_show;
          break;
       case CMD_EVENT_NETPLAY_GAME_WATCH:
-         netplay_driver_ctl(RARCH_NETPLAY_CTL_GAME_WATCH, NULL);
+         netplay_gekkonet_toggle_game_watch();
          break;
       case CMD_EVENT_NETPLAY_PLAYER_CHAT:
-         netplay_driver_ctl(RARCH_NETPLAY_CTL_PLAYER_CHAT, NULL);
+         netplay_gekkonet_toggle_chat_overlay();
          break;
       case CMD_EVENT_NETPLAY_FADE_CHAT_TOGGLE:
          settings->bools.netplay_fade_chat =
             !settings->bools.netplay_fade_chat;
          break;
       case CMD_EVENT_NETPLAY_DEINIT:
-         deinit_netplay();
+         netplay_gekkonet_shutdown();
          break;
       case CMD_EVENT_NETWORK_INIT:
          network_init();
@@ -4849,7 +4849,8 @@ bool command_event(enum event_command cmd, void *data)
             if (!netplay_port)
                netplay_port   = settings->uints.netplay_port;
 
-            ret = init_netplay(netplay_server, netplay_port, netplay_session);
+            ret = netplay_gekkonet_start_client(netplay_server,
+                  netplay_port, netplay_session, false);
 
             if (netplay_session)
                free(netplay_session);
@@ -4903,7 +4904,8 @@ bool command_event(enum event_command cmd, void *data)
             RARCH_LOG("[Netplay] Connecting to %s|%d (direct).\n",
                netplay_server, netplay_port);
 
-            if (!init_netplay(netplay_server, netplay_port, netplay_session))
+            if (!netplay_gekkonet_start_client(netplay_server,
+                     netplay_port, netplay_session, false))
             {
                command_event(CMD_EVENT_NETPLAY_DEINIT, NULL);
                return false;
@@ -4940,7 +4942,8 @@ bool command_event(enum event_command cmd, void *data)
             RARCH_LOG("[Netplay] Connecting to %s|%d (deferred).\n",
                netplay_server, netplay_port);
 
-            if (!init_netplay_deferred(netplay_server, netplay_port, netplay_session))
+            if (!netplay_gekkonet_start_client(netplay_server,
+                     netplay_port, netplay_session, true))
             {
                command_event(CMD_EVENT_NETPLAY_DEINIT, NULL);
                return false;
@@ -4962,7 +4965,7 @@ bool command_event(enum event_command cmd, void *data)
             if (netplay_driver_ctl(RARCH_NETPLAY_CTL_USE_CORE_PACKET_INTERFACE, NULL))
             {
                netplay_driver_ctl(RARCH_NETPLAY_CTL_ENABLE_SERVER, NULL);
-               command_event(CMD_EVENT_NETPLAY_INIT, NULL);
+               netplay_gekkonet_start_host(settings->uints.netplay_port);
             }
             else if (!task_push_netplay_content_reload(NULL))
             {
@@ -4970,6 +4973,7 @@ bool command_event(enum event_command cmd, void *data)
                const char *_msg = msg_hash_to_str(MENU_ENUM_LABEL_VALUE_NETPLAY_START_WHEN_LOADED);
                command_event(CMD_EVENT_NETPLAY_DEINIT, NULL);
                netplay_driver_ctl(RARCH_NETPLAY_CTL_ENABLE_SERVER, NULL);
+               netplay_gekkonet_start_host(settings->uints.netplay_port);
 
                runloop_msg_queue_push(_msg, strlen(_msg), 1, 480, true, NULL,
                   MESSAGE_QUEUE_ICON_DEFAULT, MESSAGE_QUEUE_CATEGORY_INFO);
@@ -4992,8 +4996,8 @@ bool command_event(enum event_command cmd, void *data)
             bool rewind_enable         = settings->bools.rewind_enable;
             unsigned autosave_interval = settings->uints.autosave_interval;
 
-            netplay_driver_ctl(RARCH_NETPLAY_CTL_DISCONNECT, NULL);
-            netplay_driver_ctl(RARCH_NETPLAY_CTL_DISABLE, NULL);
+            netplay_gekkonet_disconnect();
+            netplay_gekkonet_shutdown();
 
 #ifdef HAVE_REWIND
             /* Re-enable rewind if it was enabled
