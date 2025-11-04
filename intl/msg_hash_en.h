@@ -1291,50 +1291,50 @@ MSG_HASH(
 
 MSG_HASH(
    MENU_ENUM_LABEL_VALUE_NETPLAY_ENABLE_CLIENT,
-   "Connect to Net-play Host"
+   "Connect to GekkoNet Host"
    )
 MSG_HASH(
    MENU_ENUM_SUBLABEL_NETPLAY_ENABLE_CLIENT,
-   "Enter net-play server address and connect in client mode."
+   "Enter a GekkoNet lobby address and join a rollback session as a client."
    )
 MSG_HASH(
    MENU_ENUM_LABEL_VALUE_NETPLAY_DISCONNECT,
-   "Disconnect From Net-play Host"
+   "Disconnect From GekkoNet Session"
    )
 MSG_HASH(
    MENU_ENUM_SUBLABEL_NETPLAY_DISCONNECT,
-   "Disconnect an active net-play connection."
+   "Terminate the active GekkoNet rollback session."
    )
 MSG_HASH(
    MENU_ENUM_LABEL_VALUE_NETPLAY_REFRESH_ROOMS,
-   "Refresh Net-play Host List"
+   "Refresh GekkoNet Lobby List"
    )
 MSG_HASH(
    MENU_ENUM_SUBLABEL_NETPLAY_REFRESH_ROOMS,
-   "Scan for net-play hosts."
+   "Query the current list of available GekkoNet hosts."
    )
 MSG_HASH(
    MENU_ENUM_LABEL_VALUE_NETPLAY_REFRESH_LAN,
-   "Refresh Net-play LAN List"
+   "Refresh GekkoNet LAN List"
    )
 MSG_HASH(
    MENU_ENUM_SUBLABEL_NETPLAY_REFRESH_LAN,
-   "Scan for net-play hosts on LAN."
+   "Scan the local network for broadcast GekkoNet sessions."
    )
 
 /* Netplay > Host */
 
 MSG_HASH(
    MENU_ENUM_LABEL_VALUE_NETPLAY_ENABLE_HOST,
-   "Start Net-play Host"
+   "Start GekkoNet Host"
    )
 MSG_HASH(
    MENU_ENUM_SUBLABEL_NETPLAY_ENABLE_HOST,
-   "Start net-play in host (server) mode."
+   "Start hosting the current content through GekkoNet rollback networking."
    )
 MSG_HASH(
    MENU_ENUM_LABEL_VALUE_NETPLAY_DISABLE_HOST,
-   "Stop Net-play Host"
+   "Stop GekkoNet Host"
    )
 
 /* Import Content */
