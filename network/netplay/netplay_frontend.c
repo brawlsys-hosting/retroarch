@@ -9,6 +9,9 @@
  *  runtime in network/gekko without touching the surrounding code.
  */
 
+#ifndef RARCH_NETPLAY_GEKKONET_FRONTEND_C
+#define RARCH_NETPLAY_GEKKONET_FRONTEND_C
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -277,6 +280,60 @@ bool netplay_gekkonet_start_client(const char *server,
    RARCH_LOG("[GekkoNet] Starting client session (%s:%u).\n",
          string_is_empty(server) ? "local" : server, port);
 
+   return netplay_gekkonet_start_session(GEKKONET_MODE_CLIENT,
+         server, port, session, deferred);
+}
+
+bool netplay_gekkonet_start_host(unsigned port)
+{
+   RARCH_LOG("[GekkoNet] Hosting on port %u.\n", port);
+   return netplay_gekkonet_start_session(GEKKONET_MODE_HOST,
+         NULL, port, NULL, false);
+}
+
+void netplay_gekkonet_disconnect(void)
+{
+   RARCH_LOG("[GekkoNet] Disconnect requested.\n");
+   netplay_gekkonet_disconnect_internal(false);
+   netplay_gekkonet_refresh_status();
+}
+
+void netplay_gekkonet_shutdown(void)
+{
+   RARCH_LOG("[GekkoNet] Shutting down session.\n");
+   netplay_gekkonet_disconnect_internal(true);
+}
+
+void netplay_gekkonet_toggle_game_watch(void)
+{
+   g_gekkonet.spectating = !g_gekkonet.spectating;
+   g_gekkonet.playing    = !g_gekkonet.spectating;
+}
+
+void netplay_gekkonet_toggle_chat_overlay(void)
+{
+   g_gekkonet.chat_visible = !g_gekkonet.chat_visible;
+}
+
+bool init_netplay(const char *server,
+      unsigned port, const char *session)
+{
+   return netplay_gekkonet_start_client(server, port, session, false);
+}
+
+bool init_netplay_deferred(const char *server,
+      unsigned port, const char *session)
+{
+   return netplay_gekkonet_start_client(server, port, session, true);
+}
+
+void deinit_netplay(void)
+{
+   netplay_gekkonet_shutdown();
+}
+
+bool netplay_driver_ctl(enum rarch_netplay_ctl_state state, void *data)
+{
 
    RARCH_LOG("[GekkoNet] Starting client session (%s:%u).\n",
          string_is_empty(server) ? "local" : server, port);
@@ -499,6 +556,12 @@ int16_t input_state_net(unsigned port, unsigned device,
       unsigned idx, unsigned id)
 {
    return input_driver_state_wrapper(port, device, idx, id);
+}
+
+const gfx_widget_t gfx_widget_netplay_chat = {0};
+const gfx_widget_t gfx_widget_netplay_ping = {0};
+
+#endif /* RARCH_NETPLAY_GEKKONET_FRONTEND_C */
 }
 
 const gfx_widget_t gfx_widget_netplay_chat = {0};
