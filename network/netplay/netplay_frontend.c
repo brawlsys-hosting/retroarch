@@ -38,6 +38,13 @@
 
 #define GEKKONET_MAX_CLIENTS 8
 
+#include "netplay.h"
+#include "netplay_defines.h"
+
+#include "../gekko/gekkonet.h"
+
+#define GEKKONET_MAX_CLIENTS 8
+
 static net_driver_state_t networking_driver_st = {0};
 
 typedef struct netplay_gekkonet_frontend
@@ -327,12 +334,74 @@ void deinit_netplay(void)
 
 bool netplay_driver_ctl(enum rarch_netplay_ctl_state state, void *data)
 {
+
+   RARCH_LOG("[GekkoNet] Starting client session (%s:%u).\n",
+         string_is_empty(server) ? "local" : server, port);
+
+   return netplay_gekkonet_start_session(GEKKONET_MODE_CLIENT,
+         server, port, session, deferred);
+}
+
+bool netplay_gekkonet_start_host(unsigned port)
+{
+   RARCH_LOG("[GekkoNet] Hosting on port %u.\n", port);
+   return netplay_gekkonet_start_session(GEKKONET_MODE_HOST,
+         NULL, port, NULL, false);
+}
+
+void netplay_gekkonet_disconnect(void)
+{
+   RARCH_LOG("[GekkoNet] Disconnect requested.\n");
+   netplay_gekkonet_disconnect_internal(false);
+   netplay_gekkonet_refresh_status();
+}
+
+void netplay_gekkonet_shutdown(void)
+{
+   RARCH_LOG("[GekkoNet] Shutting down session.\n");
+   netplay_gekkonet_disconnect_internal(true);
+}
+
+void netplay_gekkonet_toggle_game_watch(void)
+{
+   g_gekkonet.spectating = !g_gekkonet.spectating;
+   g_gekkonet.playing    = !g_gekkonet.spectating;
+}
+
+void netplay_gekkonet_toggle_chat_overlay(void)
+{
+   g_gekkonet.chat_visible = !g_gekkonet.chat_visible;
+}
+
+bool init_netplay(const char *server,
+      unsigned port, const char *session)
+{
+   return netplay_gekkonet_start_client(server, port, session, false);
+}
+
+bool init_netplay_deferred(const char *server,
+      unsigned port, const char *session)
+{
+   return netplay_gekkonet_start_client(server, port, session, true);
+}
+
+void deinit_netplay(void)
+{
+   netplay_gekkonet_shutdown();
+}
+
+bool netplay_driver_ctl(enum rarch_netplay_ctl_state state, void *data)
+{
    net_driver_state_t *net_st = &networking_driver_st;
 
    switch (state)
    {
       case RARCH_NETPLAY_CTL_GAME_WATCH:
          netplay_gekkonet_toggle_game_watch();
+         return true;
+      case RARCH_NETPLAY_CTL_PLAYER_CHAT:
+         netplay_gekkonet_toggle_chat_overlay();
+         return true;
          return true;
       case RARCH_NETPLAY_CTL_PLAYER_CHAT:
          netplay_gekkonet_toggle_chat_overlay();
@@ -493,3 +562,46 @@ const gfx_widget_t gfx_widget_netplay_chat = {0};
 const gfx_widget_t gfx_widget_netplay_ping = {0};
 
 #endif /* RARCH_NETPLAY_GEKKONET_FRONTEND_C */
+}
+
+const gfx_widget_t gfx_widget_netplay_chat = {0};
+const gfx_widget_t gfx_widget_netplay_ping = {0};
+}
+
+bool netplay_reinit_serialization(void)
+{
+   if (!g_gekkonet.session)
+      return false;
+   return gekkonet_session_request_state(g_gekkonet.session);
+}
+
+bool netplay_is_spectating(void)
+{
+   return g_gekkonet.spectating;
+}
+
+void netplay_force_send_savestate(void)
+{
+   if (g_gekkonet.session)
+      gekkonet_session_request_state(g_gekkonet.session);
+}
+
+#ifdef HAVE_NETPLAYDISCOVERY
+bool init_netplay_discovery(void)
+{
+   return gekkonet_lobby_initialize(&g_gekkonet.lobby);
+}
+
+void deinit_netplay_discovery(void)
+{
+   gekkonet_lobby_deinitialize(&g_gekkonet.lobby);
+}
+
+bool netplay_discovery_driver_ctl(
+      enum rarch_netplay_discovery_ctl_state state, void *data)
+{
+   return gekkonet_lobby_command(&g_gekkonet.lobby, state, data);
+}
+#endif
+
+const mitm_server_t netplay_mitm_server_list[NETPLAY_MITM_SERVERS] = {0};
