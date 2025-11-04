@@ -271,6 +271,74 @@ bool netplay_decode_hostname(const char *hostname,
    return true;
 }
 
+bool netplay_gekkonet_start_client(const char *server_address,
+      unsigned port_number, const char *session_token, bool deferred_join)
+{
+   const char *address = server_address;
+   unsigned     port   = port_number;
+   const char  *session = session_token;
+   bool         deferred = deferred_join;
+
+   if (string_is_empty(address))
+      address = "";
+
+   RARCH_LOG("[GekkoNet] Starting client session (%s:%u).\n",
+         string_is_empty(address) ? "local" : address, port);
+
+   return netplay_gekkonet_start_session(GEKKONET_MODE_CLIENT,
+         address, port, session, deferred);
+}
+
+bool netplay_gekkonet_start_host(unsigned port)
+{
+   RARCH_LOG("[GekkoNet] Hosting on port %u.\n", port);
+   return netplay_gekkonet_start_session(GEKKONET_MODE_HOST,
+         NULL, port, NULL, false);
+}
+
+void netplay_gekkonet_disconnect(void)
+{
+   RARCH_LOG("[GekkoNet] Disconnect requested.\n");
+   netplay_gekkonet_disconnect_internal(false);
+   netplay_gekkonet_refresh_status();
+}
+
+void netplay_gekkonet_shutdown(void)
+{
+   RARCH_LOG("[GekkoNet] Shutting down session.\n");
+   netplay_gekkonet_disconnect_internal(true);
+}
+
+void netplay_gekkonet_toggle_game_watch(void)
+{
+   g_gekkonet.spectating = !g_gekkonet.spectating;
+   g_gekkonet.playing    = !g_gekkonet.spectating;
+}
+
+void netplay_gekkonet_toggle_chat_overlay(void)
+{
+   g_gekkonet.chat_visible = !g_gekkonet.chat_visible;
+}
+
+bool init_netplay(const char *server,
+      unsigned port, const char *session)
+{
+   return netplay_gekkonet_start_client(server, port, session, false);
+}
+
+bool init_netplay_deferred(const char *server,
+      unsigned port, const char *session)
+{
+   return netplay_gekkonet_start_client(server, port, session, true);
+}
+
+void deinit_netplay(void)
+{
+   netplay_gekkonet_shutdown();
+}
+
+bool netplay_driver_ctl(enum rarch_netplay_ctl_state state, void *data)
+{
 bool netplay_gekkonet_start_client(const char *server,
       unsigned port, const char *session, bool deferred)
 {
@@ -545,6 +613,23 @@ void video_frame_net(const void *data,
 void audio_sample_net(int16_t left, int16_t right)
 {
    audio_driver_sample(left, right);
+}
+
+size_t audio_sample_batch_net(const int16_t *data, size_t frames)
+{
+   return audio_driver_sample_batch(data, frames);
+}
+
+int16_t input_state_net(unsigned port, unsigned device,
+      unsigned idx, unsigned id)
+{
+   return input_driver_state_wrapper(port, device, idx, id);
+}
+
+const gfx_widget_t gfx_widget_netplay_chat = {0};
+const gfx_widget_t gfx_widget_netplay_ping = {0};
+
+#endif /* RARCH_NETPLAY_GEKKONET_FRONTEND_C */
 }
 
 size_t audio_sample_batch_net(const int16_t *data, size_t frames)
