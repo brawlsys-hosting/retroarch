@@ -14,6 +14,7 @@
 
 #include <retro_miscellaneous.h>
 #include <string/stdstring.h>
+#include <lists/string_list.h>
 
 #ifdef HAVE_CONFIG_H
 #include "../../config.h"
